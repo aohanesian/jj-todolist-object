@@ -2,12 +2,17 @@
 (() => {
     const toDoList = {
         selector: null,
+        id: null,
         form: null,
         containerSelector: null,
         container: null,
         init(selector, container) {
             if (typeof selector === "string" || selector.trim() !== '') this.selector = selector;
             if (typeof container === 'string' || container.trim() !== '') this.containerSelector = container;
+            if (localStorage.getItem(this.selector) && JSON.parse(localStorage.getItem(this.selector)).length) {
+                const tempData = JSON.parse(localStorage.getItem(this.selector));
+                this.id = tempData[tempData.length - 1].id;
+            }
             this.getForm();
             this.getHTMLElement();
             this.deleteItem();
@@ -22,6 +27,7 @@
                 formElement.querySelectorAll('input, textarea').forEach((item) => {
                     data[item.name] = item.value;
                 })
+                data.id = ++this.id;
                 const savedData = this.saveData(data);
                 this.renderItem(savedData);
             })
@@ -42,14 +48,11 @@
             let dataFromStore = localStorage.getItem(this.selector);
             if (!dataFromStore) {
                 const array = [];
-                // data.id = 1;
-                data.id = Number(Number(data.id) + 1);
                 array.push(data);
                 localStorage.setItem(this.selector, JSON.stringify(array));
             }
             if (dataFromStore) {
                 dataFromStore = JSON.parse(dataFromStore);
-                data.id = Number(dataFromStore[dataFromStore.length - 1].id + 1);
                 dataFromStore.push(data);
                 localStorage.setItem(this.selector, JSON.stringify(dataFromStore));
             }
@@ -72,7 +75,7 @@
                 evt.stopPropagation();
                 const currentItem = evt.target.closest('[data-id]');
                 if (currentItem === null) return;
-                const currentItemId = Number(currentItem.getAttribute('data-id'));
+                const currentItemId = +currentItem.getAttribute('data-id');
                 const filteredData = JSON.parse(localStorage.getItem(this.selector)).filter(item => item.id !== currentItemId);
                 localStorage.setItem(this.selector, JSON.stringify(filteredData));
                 currentItem.remove();
